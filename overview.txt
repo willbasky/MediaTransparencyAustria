@@ -1,1 +1,0 @@
-[QuartalOverview {qoQuartal = "20184", qoBekanntgabe2 = 5.9960768e7, qoBekanntgabe4 = 4849748.0, qoBekanntgabe31 = 1.634e8}]

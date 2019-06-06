@@ -20,70 +20,18 @@ source-repository head
   type:                git
   location:            https://github.com/willbasky/MediaTransparencyAustria.git
 
-library
-  hs-source-dirs:      src
-  exposed-modules:     MediaTransparencyAustria
-                       Net
-
-
-  build-depends:       base ^>= 4.12.0.0
-                     , aeson
-                     , http-conduit
-                     , text
-                     , pretty-simple
-
-
-  ghc-options:         -Wall
-                       -Wincomplete-uni-patterns
-                       -Wincomplete-record-updates
-                       -Wcompat
-                       -Widentities
-                       -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
-
-  default-language:    Haskell2010
-
-  default-extensions:  DeriveGeneric
-                       GeneralizedNewtypeDeriving
-                       LambdaCase
-                       OverloadedStrings
-                       RecordWildCards
-                       ScopedTypeVariables
-                       TypeApplications
-
 executable MediaTransparencyAustria
   hs-source-dirs:      app
   main-is:             Main.hs
 
   build-depends:       base ^>= 4.12.0.0
-                     , MediaTransparencyAustria
-
-
-  ghc-options:         -Wall
-                       -threaded
-                       -rtsopts
-                       -with-rtsopts=-N
-                       -Wincomplete-uni-patterns
-                       -Wincomplete-record-updates
-                       -Wcompat
-                       -Widentities
-                       -Wredundant-constraints
-                       -fhide-source-paths
-                       -Wmissing-export-lists
-                       -Wpartial-fields
-
-  default-language:    Haskell2010
-
-test-suite MediaTransparencyAustria-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-
-  build-depends:       base ^>= 4.12.0.0
-                     , MediaTransparencyAustria
-
+                     , aeson
+                     , async
+                     , bytestring
+                     , http-conduit
+                     , mtl
+                     , text
+                     , pretty-simple
 
   ghc-options:         -Wall
                        -threaded
@@ -99,3 +47,5 @@ test-suite MediaTransparencyAustria-test
                        -Wpartial-fields
 
   default-language:    Haskell2010
+
+
