@@ -28,10 +28,10 @@ executable MediaTransparencyAustria
                      , aeson
                      , async
                      , bytestring
+                     , fmt
                      , http-conduit
                      , mtl
                      , text
-                     , pretty-simple
 
   ghc-options:         -Wall
                        -threaded
