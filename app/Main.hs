@@ -315,8 +315,8 @@ details :: Text -> Text -> [MediaInfo] -> [Detail]
 details who name ps = sortByFieldDesc dEuro foundByName
   where
     foundByName = case who of
-        "payers" -> listAgents rechtstraeger mediumMedieninhaber
-        "recipients" -> listAgents mediumMedieninhaber rechtstraeger
+        "payers" -> listAgents mediumMedieninhaber rechtstraeger
+        "recipients" -> listAgents rechtstraeger mediumMedieninhaber
         _ -> error "Wrong first argument. 'payers' or 'recipients' are awaited."
 
     listAgents :: (MediaInfo -> Text) -> (MediaInfo -> Text) -> [Detail]
