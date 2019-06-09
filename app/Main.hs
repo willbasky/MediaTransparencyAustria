@@ -24,7 +24,7 @@ import System.Exit (exitSuccess)
 import System.IO (stdout)
 import Text.Read (readEither)
 
-import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import qualified Data.Text.IO as T
@@ -95,7 +95,7 @@ emptyOverView = QuartalOverview
 cli :: MVar [MediaInfo] -> IO ()
 cli mi = forever $ do
     T.putStrLn "\nEnter your command or type 'help' for assistance"
-    query <- fmap E.decodeUtf8 $ BC.hPutStr stdout "> " >> BC.getLine
+    query <- fmap E.decodeUtf8 $ B.hPutStr stdout "> " >> B.getLine
     let command = words $ T.unpack query
     case command of
         (q:qs) -> case q of
@@ -337,7 +337,6 @@ sumDetailEuro agent mi@MediaInfo{..} Detail{..} = Detail
 
 showDetails :: [Detail] -> IO ()
 showDetails mi = do
-    writeFile "top.txt" $ show mi
     let cat2 = filter (\Detail{..} -> 2 == dCategory) mi
     let cat4 = filter (\Detail{..} -> 4 == dCategory) mi
     let cat31 = filter (\Detail{..} -> 31 == dCategory) mi
