@@ -164,11 +164,17 @@ main = do
     readJSON $ parseQuartalArgs args
 
 -- Common functions
+nubByField :: Ord a => (t -> a) -> [t] -> [t]
+nubByField field = nubBy (\a b -> field a == field b)
+
+sortByFieldAsc :: Ord a => (t -> a) -> [t] -> [t]
+sortByFieldAsc field = sortBy (\a b -> compare (field a) (field b))
+
 sortByFieldDesc :: Ord a => (t -> a) -> [t] -> [t]
 sortByFieldDesc field = sortBy (\a b -> flip compare (field a) (field b))
 
-groupByFieldDesc :: Ord a => (t -> a) -> [t] -> [[t]]
-groupByFieldDesc field = groupBy (\a b -> field a == field b)
+groupByField :: Ord a => (t -> a) -> [t] -> [[t]]
+groupByField field = groupBy (\a b -> field a == field b)
 
 unUmlaut :: Text -> Text
 unUmlaut txt = case T.uncons lowTxt of
@@ -198,7 +204,7 @@ filterRecipients = sortBy (\a b -> compare (unUmlaut a) (unUmlaut b)) . nub . ma
 
 -- Set 3
 overviewByQuartal :: [MediaInfo] -> [QuartalOverview]
-overviewByQuartal = map sumQuartal . groupBy (\a b -> quartal a == quartal b)
+overviewByQuartal = sortByFieldAsc qoQuartal . map sumQuartal . groupByField quartal
     where
         sumQuartal = foldr sumByCategory emptyOverView
         sumByCategory MediaInfo{..} QuartalOverview{..} = case bekanntgabe of
@@ -245,7 +251,7 @@ showTop mi n who cat = case who of
     reduceAgents :: [[MediaInfo]] -> [Top]
     reduceAgents = map (foldr sumTopEuro emptyTop)
     groupAgents :: (MediaInfo -> Payer) -> [[MediaInfo]]
-    groupAgents agent = groupByFieldDesc agent $ sortByFieldDesc agent filterByCat
+    groupAgents agent = groupByField agent $ sortByFieldDesc agent filterByCat
     filterByCat :: [MediaInfo]
     filterByCat = filter (\MediaInfo{..} -> cat == bekanntgabe) mi
 
@@ -287,15 +293,16 @@ readCategory cat = case cat of
     "§31" -> Right 31
     _    -> Left "Wrong category. 2,4,31 are awaited."
 
--- Set 6
+-- Set 6. Search company in payers or recipients.
 search :: Text -> Text -> [MediaInfo] -> IO ()
 search who query ps = case who of
     "payers" -> mapM_ (\MediaInfo{..} -> T.putStrLn rechtstraeger) $
-        nubBy (\a b -> rechtstraeger a == rechtstraeger b) found
+        sortByFieldAsc rechtstraeger $ nubByField rechtstraeger found
     "recipients" -> mapM_ (\MediaInfo{..} -> T.putStrLn mediumMedieninhaber) $
-        nubBy (\a b -> mediumMedieninhaber a == mediumMedieninhaber b) found
+        sortByFieldAsc mediumMedieninhaber $ nubByField mediumMedieninhaber found
     _ -> pure ()
     where
+        found :: [MediaInfo]
         found = case who of
             "payers" -> filter (\MediaInfo{..} -> q `T.isInfixOf` (T.toLower rechtstraeger)) ps
             "recipients" -> filter (\MediaInfo{..} -> q `T.isInfixOf` (T.toLower mediumMedieninhaber)) ps
@@ -310,24 +317,35 @@ parse2StringArgs (str:query) = do
         Right w' -> pure w'
     pure (who, unwords query)
 
--- Set 7
+-- Set 7. Show all companies who got payments from query company or who payed to query company.
 details :: Text -> Text -> [MediaInfo] -> [Detail]
 details who name ps = sortByFieldDesc dEuro foundByName
   where
+    foundByName :: [Detail]
     foundByName = case who of
         "payers" -> listAgents mediumMedieninhaber rechtstraeger
         "recipients" -> listAgents rechtstraeger mediumMedieninhaber
         _ -> error "Wrong first argument. 'payers' or 'recipients' are awaited."
 
     listAgents :: (MediaInfo -> Text) -> (MediaInfo -> Text) -> [Detail]
-    listAgents who' name' = concatMap (reduceAgents who') $ map (groupAgents who') $ groupAgents bekanntgabe $ filterByAgent name' name
+    listAgents who' name' = concatMap (reduceAgents who')
+        $ map (groupAgents who')
+        $ groupAgents bekanntgabe
+        $ filterByAgent name' name
+
+    -- Fold items to output type
     reduceAgents :: (MediaInfo -> Text) -> [[MediaInfo]] -> [Detail]
     reduceAgents agent = map (foldr (sumDetailEuro agent) emptyDetail)
-    groupAgents agent = groupByFieldDesc agent . sortByFieldDesc agent
 
+    -- Group and sort items by category
+    groupAgents :: (Ord a) => (t -> a) -> [t] -> [[t]]
+    groupAgents agent = groupByField agent . sortByFieldDesc agent
+
+    -- Collect items of given company when it pays or recieves.
     filterByAgent :: (MediaInfo -> Text) -> Text -> [MediaInfo]
     filterByAgent agent name' = filter (\mi -> T.toLower name' == T.toLower (agent mi)) ps
 
+-- Build Detail type from MediaInfo type summing euro up.
 sumDetailEuro :: (MediaInfo -> Text) -> MediaInfo -> Detail -> Detail
 sumDetailEuro agent mi@MediaInfo{..} Detail{..} = Detail
     { dAgent = agent mi
@@ -352,7 +370,7 @@ pprintDetails ds =
     mapM_ (\Detail{..} ->
         fmtLn $ padRightF 70 ' ' (build dAgent) <> padLeftF 15 ' ' (formatNum dEuro)) ds
 
--- Other
+-- Constant stuff
 jsonURL :: Int -> String
 jsonURL yearQuart = concat
     [ "https://data.rtr.at/api/v1/tables/MedKFTGBekanntgabe.json?quartal="
@@ -378,7 +396,7 @@ helpText = unlinesF
 lastQuartal :: Int
 lastQuartal = 20184
 
--- Formating functions
+-- Functions to format output --
 
 -- Get integer part of number and add dots between thousands
 formatInteger :: Double -> Builder
