@@ -5,7 +5,7 @@ synopsis:            See README for more info
 description:         See README for more info
 homepage:            https://github.com/willbasky/MediaTransparencyAustria
 bug-reports:         https://github.com/willbasky/MediaTransparencyAustria/issues
-license:             UNLICENSE
+license:             Unlicense
 license-file:        UNLICENSE
 author:              willbasky
 maintainer:          vladislav.sabanov@gmail.com
